@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  #InfluxDB
+  influxdb:
+    container_name: influxdb
+    image: influxdb:alpine
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb2
+      - ./influxdb/config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_DB_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_DB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=StockScraper
+      - DOCKER_INFLUXDB_INIT_BUCKET=Stocks
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_DB_ADMIN_TOKEN}
+      # Other Setup
+      - INFLUXDB_REPORTING_DISABLED=true
+      - INFLUXDB_DATA_CACHE_SNAPSHOT_MEMORY_SIZE=1g
+      - INFLUXDB_DATA_CACHE_SNAPSHOT_WRITE_COLD_DURATION=10m
+      - INFLUXDB_DATA_COMPACT_FULL_WRITE_COLD_DURATION=1h
+      - INFLUXDB_COORDINATOR_WRITE_TIMEOUT=30s
+      - INFLUXDB_COORDINATOR_QUERY_TIMEOUT=30s
+      - INFLUXDB_RETENTION_ENABLED=false
+      - INFLUXDB_DATA_INDEX_VERSION=tsi1 #if more ram is available inmem can be used
+
+
+
+  # prefect:
+  #   container_name: prefect
+  #   ports:
+  #     - "20001:20001"
+  #   build: ./docker/server/
+
+
+
+      
