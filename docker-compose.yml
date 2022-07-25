@@ -27,14 +27,20 @@ services:
       - INFLUXDB_RETENTION_ENABLED=false
       - INFLUXDB_DATA_INDEX_VERSION=tsi1 #if more ram is available inmem can be used
 
+  stock-scraper:
+    container_name: StockScraper
+    build: ./src/Stocks/
+    environment:
+      - STOCKSCRAPER_INFLUXDB_TOKEN=${INFLUX_DB_ADMIN_TOKEN}
+      - STOCKSCRAPER_INFLUXDB_ORG=StockScraper
+      - STOCKSCRAPER_INFLUXDB_BUCKET=Stocks
+      - STOCKSCRAPER_INFLUXDB_HOST=influxdb
+      - STOCKSCRAPER_INFLUXDB_PORT=8086
+      - STOCKSCRAPER_MODE=Single #Single or Scheduled
+      - STOCKSCRAPER_TICKERS_DIR=/var/lib/stock-scraper
 
-
-  # prefect:
-  #   container_name: prefect
-  #   ports:
-  #     - "20001:20001"
-  #   build: ./docker/server/
-
+    volumes:
+      - ./tickers:/var/lib/stock-scraper
 
 
       

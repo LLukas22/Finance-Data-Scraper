@@ -1,0 +1,5 @@
+pytz
+pandas
+yfinance
+influxdb-client
+pandas-market-calendars

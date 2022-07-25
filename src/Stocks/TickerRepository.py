@@ -1,9 +1,9 @@
-from InfluxClient import InfluxClient,URL,TOKEN
+from InfluxClient import InfluxClient
 from model.Ticker import Ticker
 import os
 import pandas as pd
-import glob
 from datetime import datetime
+import logging
 
 class TickerRepository(object):
     exchanges:dict[str,dict[str,Ticker]]
@@ -13,7 +13,15 @@ class TickerRepository(object):
         self.influx_client = influx_client
         
     def load_tickers(self,directory:str)->None:
-        for file in glob.glob(f"{directory}\\*.csv"):
+        """
+        Load tickers from *.csv files in a directory where the filename is the exchange and the tickers are the rows in the file.
+        """
+        files = [file for file in os.listdir(directory) if file.endswith(".csv")]
+
+        logging.debug(f"Found files: {','.join(files)}")
+                          
+        for file in files:
+            file = os.path.join(directory,file)
             exchange = os.path.basename(file).split('.')[0].upper()
             tickers = pd.read_csv(file, header=None)
             for ticker in tickers.values:

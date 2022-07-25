@@ -6,7 +6,7 @@ class YFDataProvider(object):
     def __init__(self) -> None:
         pass
     
-    def get_data(self,tickers:list[str],start_date:datetime.date,end_date:datetime.date,interval:str)->pd.DataFrame:
+    def get_data(self,tickers:list[str],start_date:datetime.datetime,end_date:datetime.datetime,interval:str)->pd.DataFrame:
         if len(tickers) < 1:
             return None
         
@@ -14,9 +14,9 @@ class YFDataProvider(object):
         data = yf.download(ticker_string, start_date, end_date, interval=interval, threads=True, group_by = 'ticker', progress=False)
         return data
 
-    def get_max_data(self,tickers:list[str],interval:str)->pd.DataFrame:
+    def get_data_from_period(self,tickers:list[str],interval:str,period:str="max")->pd.DataFrame:
         if len(tickers) < 1:
             return None
         
         ticker_string = " ".join(tickers)
-        return yf.download(ticker_string, period = "max", interval=interval, threads=True, group_by = 'ticker', progress=False)
+        return yf.download(ticker_string, period = period, interval=interval, threads=True, group_by = 'ticker', progress=False)
