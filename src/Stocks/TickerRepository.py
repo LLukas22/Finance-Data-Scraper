@@ -1,4 +1,4 @@
-from InfluxClient import InfluxClient
+from QuestClient import QuestClient
 from model.Ticker import Ticker
 import os
 import pandas as pd
@@ -8,16 +8,15 @@ import logging
 class TickerRepository(object):
     exchanges:dict[str,dict[str,Ticker]]
     
-    def __init__(self,influx_client:InfluxClient) -> None:
+    def __init__(self,quest_client:QuestClient) -> None:
         self.exchanges = {}
-        self.influx_client = influx_client
+        self.quest_client = quest_client
         
     def load_tickers(self,directory:str)->None:
         """
         Load tickers from *.csv files in a directory where the filename is the exchange and the tickers are the rows in the file.
         """
         files = [file for file in os.listdir(directory) if file.endswith(".csv")]
-
         logging.debug(f"Found files: {','.join(files)}")
                           
         for file in files:
@@ -25,7 +24,8 @@ class TickerRepository(object):
             exchange = os.path.basename(file).split('.')[0].upper()
             tickers = pd.read_csv(file, header=None)
             for ticker in tickers.values:
-                self.add_ticker(Ticker(ticker[0],exchange))
+                if ticker[0] is not None and isinstance(ticker[0],str):
+                    self.add_ticker(Ticker(ticker[0],exchange))
                 
     def add_ticker(self,ticker:Ticker)->None:
         if ticker.exchange not in self.exchanges:
@@ -45,15 +45,12 @@ class TickerRepository(object):
     
     def _get_single_value(self,ticker:Ticker,interval:str,values:list[str]=["close"],start_time:datetime|None=None,end_time:datetime|None=None)->pd.DataFrame|None:
         df = None
-        tables = self.influx_client.get_data(ticker,interval,values,start_time,end_time)
-        if tables:
+        result = self.quest_client.get_data(ticker,interval,values,start_time,end_time)
+        if result:
             data = {}
-            for table in tables:
-                name = table.records[0].values["_field"]
-                values = [record.values["_value"] for record in table.records]
-                data[name] = values
-                
-            index = [record.values["_time"] for record in tables[0].records]
+            for i,column in enumerate(values):
+                data[column] = [entry[i+1] for entry in result['dataset']]
+            index = [datetime.strptime(entry[0] ,"%Y-%m-%dT%H:%M:%S.%fZ") for entry in result['dataset']]
             df = pd.DataFrame(data=data,index=index)   
         return df
     
@@ -71,16 +68,24 @@ class TickerRepository(object):
         else:
             return self._get_single_value(tickers,interval,values,start_time,end_time)
         
+    def remove(self,ticker:str)->bool:
+        ticker = ticker.upper()
+        for exchage in self.exchanges:
+            if ticker in self.exchanges[exchage]:
+                self.exchanges[exchage].pop(ticker)
+                return True
+        return False
 
                 
 if __name__ == "__main__":
-    influxClient = InfluxClient()
+    questClient = QuestClient()
     
-    repo = TickerRepository(influxClient)
+    repo = TickerRepository(questClient)
     
-    ticker1 = Ticker("AAPL","NASDAQ")
+    ticker1 = Ticker("A","NASDAQ")
     ticker2 = Ticker("GOOGL","NASDAQ")
     repo.add_ticker(ticker1)
+    repo.add_ticker(ticker2)
     data = repo.get_values([ticker1,ticker2],"1d",values=["close","volume"])
     print(data)
     

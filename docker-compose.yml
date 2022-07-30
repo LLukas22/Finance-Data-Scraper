@@ -1,46 +1,63 @@
 version: "3.9"
 
 services:
-  #InfluxDB
-  influxdb:
-    container_name: influxdb
-    image: influxdb:alpine
+  #questDB
+  questDB:
+    container_name: questDB
+    image: questdb/questdb:latest
+    profiles:
+      - database
+      - all
     ports:
-      - "8086:8086"
+      - "9000:9000"
+      - "9009:9009"
     volumes:
-      - ./influxdb/data:/var/lib/influxdb2
-      - ./influxdb/config:/etc/influxdb2
+      - ./questdb:/var/lib/questdb
+         
+  mongoDB:
+    image: mongo
+    container_name: mongodb
+    profiles:
+      - database
+      - all
+    #restart: always
+    volumes:
+      - ./mongodb:/data/db
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_DB_USER}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_DB_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ORG=StockScraper
-      - DOCKER_INFLUXDB_INIT_BUCKET=Stocks
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_DB_ADMIN_TOKEN}
-      # Other Setup
-      - INFLUXDB_REPORTING_DISABLED=true
-      - INFLUXDB_DATA_CACHE_SNAPSHOT_MEMORY_SIZE=1g
-      - INFLUXDB_DATA_CACHE_SNAPSHOT_WRITE_COLD_DURATION=10m
-      - INFLUXDB_DATA_COMPACT_FULL_WRITE_COLD_DURATION=1h
-      - INFLUXDB_COORDINATOR_WRITE_TIMEOUT=30s
-      - INFLUXDB_COORDINATOR_QUERY_TIMEOUT=30s
-      - INFLUXDB_RETENTION_ENABLED=false
-      - INFLUXDB_DATA_INDEX_VERSION=tsi1 #if more ram is available inmem can be used
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASDWORD}
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    #restart: always
+    profiles:
+      - database
+      - all
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_DB_PASDWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_DB_USER}:${MONGO_DB_PASDWORD}@mongoDB:27017
+
+    depends_on:
+      - mongoDB
 
   stock-scraper:
     container_name: StockScraper
     build: ./src/Stocks/
+    profiles:
+      - all
     environment:
-      - STOCKSCRAPER_INFLUXDB_TOKEN=${INFLUX_DB_ADMIN_TOKEN}
-      - STOCKSCRAPER_INFLUXDB_ORG=StockScraper
-      - STOCKSCRAPER_INFLUXDB_BUCKET=Stocks
-      - STOCKSCRAPER_INFLUXDB_HOST=influxdb
-      - STOCKSCRAPER_INFLUXDB_PORT=8086
+      - STOCKSCRAPER_QUESTDB_HOST=questdb
+      - STOCKSCRAPER_QUESTDB_ILP_PORT=9009
+      - STOCKSCRAPER_QUESTDB_PORT=9000
       - STOCKSCRAPER_MODE=Single #Single or Scheduled
       - STOCKSCRAPER_TICKERS_DIR=/var/lib/stock-scraper
 
     volumes:
       - ./tickers:/var/lib/stock-scraper
 
-
-      
+    depends_on:
+      - questDB

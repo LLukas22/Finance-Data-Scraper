@@ -1,5 +1,7 @@
 pytz
 pandas
 yfinance
-influxdb-client
+questdb
+requests
 pandas-market-calendars
+tqdm

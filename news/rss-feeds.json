@@ -1,0 +1,8 @@
+{
+    "SeekingAlpha":"https://seekingalpha.com/market_currents.xml",
+    "CNBC":"http://www.cnbc.com/id/19746125/device/rss/rss.xml",
+    "Fortune":"https://fortune.com/feed",
+    "FinancialTimes":"https://www.ft.com/?format=rss",
+    "Investing.com":"https://www.investing.com/rss/news.rss",
+    "YahooNews":"https://finance.yahoo.com/news/rssindex"
+}

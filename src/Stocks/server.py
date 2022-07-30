@@ -4,7 +4,7 @@ import glob
 import os
 import pytz
 from ExecutionContext import ExecutionContext
-from InfluxClient import InfluxClient
+from QuestClient import QuestClient
 from TickerRepository import TickerRepository
 from YFDataProvider import YFDataProvider
 from model.Ticker import Ticker
@@ -21,6 +21,9 @@ SLEEP_TIME = int(os.getenv('STOCKSCRAPER_SLEEPTIME',60*30)) # 15 minutes
 
 if __name__ == "__main__":
     
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    
     if DEBUG:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',level=logging.DEBUG)
     else:
@@ -29,7 +32,7 @@ if __name__ == "__main__":
     logging.debug(f"MODE:{MODE}")
     logging.debug(f"SLEEP_TIME:{SLEEP_TIME}")
         
-    influxClient = InfluxClient()
+    influxClient = QuestClient()
     ticker_repo = TickerRepository(influxClient)
     ticker_repo.load_tickers(TICKERS_DIR)
     
@@ -46,7 +49,8 @@ if __name__ == "__main__":
     # if its in single mode, we will run the gathering process once and then exit
     if MODE == "SINGLE":
         for exchange in ticker_repo.exchanges:
-            gather_data(exchange, executionContext)
+            now = datetime.now().astimezone(pytz.utc)
+            gather_data(exchange, executionContext,now)
     else:
         # otherwise, we will run the gathering process in a loop
         last_runs = {} 
@@ -74,7 +78,7 @@ if __name__ == "__main__":
                         #we are after the closing time => we start the gathering process
                         last_runs[exchange] = now
                         logging.info(f"Starting gathering process for exchange {exchange}...")
-                        gather_data(exchange, executionContext)
+                        gather_data(exchange, executionContext, now)
                         logging.info(f"Finished gathering process for exchange {exchange}!")
                         
                 #sleep for a while 

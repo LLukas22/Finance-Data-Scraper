@@ -1,9 +1,9 @@
 from TickerRepository import TickerRepository
 from  YFDataProvider import YFDataProvider
-from InfluxClient import InfluxClient
+from QuestClient import QuestClient
 
 class ExecutionContext(object):
-    def __init__(self,tickerRepository:TickerRepository,yfDataProcider:YFDataProvider,influxClient:InfluxClient) -> None:
+    def __init__(self,tickerRepository:TickerRepository,yfDataProcider:YFDataProvider,questClient:QuestClient) -> None:
         self.tickerRepository = tickerRepository
         self.yfDataProcider = yfDataProcider
-        self.influxClient = influxClient
+        self.questClient = questClient
