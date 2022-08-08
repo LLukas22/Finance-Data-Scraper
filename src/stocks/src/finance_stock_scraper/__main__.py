@@ -1,23 +1,22 @@
 import time
-import pandas as pd
-import glob
 import os
 import pytz
-from ExecutionContext import ExecutionContext
-from QuestClient import QuestClient
-from TickerRepository import TickerRepository
-from YFDataProvider import YFDataProvider
-from model.Ticker import Ticker
-from workflow import gather_data
-from datetime import datetime, timedelta
 import pandas_market_calendars as mcal
 import logging
+from datetime import datetime, timedelta
+from finance_stock_scraper.ExecutionContext import ExecutionContext
+from finance_stock_scraper.QuestClient import QuestClient
+from finance_stock_scraper.TickerRepository import TickerRepository
+from finance_stock_scraper.YFDataProvider import YFDataProvider
+from finance_stock_scraper.model.Ticker import Ticker
+from finance_stock_scraper.workflow import gather_data
+
+
 
 TICKERS_DIR = os.path.abspath(os.getenv('STOCKSCRAPER_TICKERS_DIR',"./Tickers"))
 DEBUG = os.getenv('STOCKSCRAPER_DEBUG',"True").upper() == "TRUE"
 MODE = os.getenv('STOCKSCRAPER_MODE',"Single").upper() # Single or Scheduled
-SLEEP_TIME = int(os.getenv('STOCKSCRAPER_SLEEPTIME',60*30)) # 15 minutes
-
+SLEEP_TIME = int(os.getenv('STOCKSCRAPER_SLEEPTIME',60*60*3)) # 3 hours
 
 if __name__ == "__main__":
     
@@ -32,8 +31,19 @@ if __name__ == "__main__":
     logging.debug(f"MODE:{MODE}")
     logging.debug(f"SLEEP_TIME:{SLEEP_TIME}")
         
-    influxClient = QuestClient()
-    ticker_repo = TickerRepository(influxClient)
+    # Create QuestClient
+    questClient = QuestClient()
+    retries = 0
+    while True:
+        if questClient.health_check():
+            break
+        else:
+            retries += 1
+            
+        if retries > 10:
+            raise Exception("Could not connect to QuestDB!")
+        
+    ticker_repo = TickerRepository(questClient)
     ticker_repo.load_tickers(TICKERS_DIR)
     
     if DEBUG:
@@ -44,7 +54,7 @@ if __name__ == "__main__":
     
     yfDataProvider = YFDataProvider()
     
-    executionContext = ExecutionContext(ticker_repo, yfDataProvider, influxClient)
+    executionContext = ExecutionContext(ticker_repo, yfDataProvider, questClient)
 
     # if its in single mode, we will run the gathering process once and then exit
     if MODE == "SINGLE":
@@ -81,7 +91,8 @@ if __name__ == "__main__":
                         gather_data(exchange, executionContext, now)
                         logging.info(f"Finished gathering process for exchange {exchange}!")
                         
-                #sleep for a while 
+                #sleep for a while
+                logging.info(f"Sleeping for {SLEEP_TIME} Seconds!")
                 time.sleep(SLEEP_TIME)
             except Exception as e:
                 logging.error(e)

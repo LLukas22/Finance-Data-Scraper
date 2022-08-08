@@ -5,7 +5,6 @@ RUN pip install -r /requirements.txt
 
 RUN mkdir /var/lib/stock-scraper
 RUN mkdir /app
-ADD . /app
+ADD ./src /app
 WORKDIR /app
-CMD ["python","-u","server.py"]
-
+CMD ["python","-m","finance_stock_scraper"]

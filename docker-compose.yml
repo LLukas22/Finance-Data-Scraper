@@ -1,63 +1,125 @@
 version: "3.9"
 
 services:
-  #questDB
   questDB:
     container_name: questDB
     image: questdb/questdb:latest
     profiles:
       - database
+      - stock-scraper
       - all
     ports:
       - "9000:9000"
+      - "9003:9003"
       - "9009:9009"
+    restart:
+      unless-stopped
     volumes:
-      - ./questdb:/var/lib/questdb
+      - ./storage/questdb:/var/lib/questdb
          
   mongoDB:
     image: mongo
     container_name: mongodb
     profiles:
       - database
+      - mongoDB
       - all
-    #restart: always
     volumes:
-      - ./mongodb:/data/db
+      - ./storage/mongodb:/data/db
+    ports:
+     - "27017:27017"
+    restart:
+      unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_DB_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASDWORD}
+    networks:
+      - mongo-network
 
   mongo-express:
     image: mongo-express
     container_name: mongo-express
-    #restart: always
     profiles:
       - database
+      - mongoDB
       - all
     ports:
-      - 8081:8081
+      - "8081:8081"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_DB_USER}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_DB_PASDWORD}
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_DB_USER}:${MONGO_DB_PASDWORD}@mongoDB:27017
-
+    restart:
+      unless-stopped
     depends_on:
       - mongoDB
+    networks:
+      - mongo-network
 
   stock-scraper:
     container_name: StockScraper
-    build: ./src/Stocks/
+    build: ./src/stocks/
     profiles:
       - all
+      - stock-scraper
+    tty: true
     environment:
       - STOCKSCRAPER_QUESTDB_HOST=questdb
-      - STOCKSCRAPER_QUESTDB_ILP_PORT=9009
-      - STOCKSCRAPER_QUESTDB_PORT=9000
+      - STOCKSCRAPER_QUESTDB_ILP_PORT=9009 #line protocol port
+      - STOCKSCRAPER_QUESTDB_MONITORING_PORT=9003 #Port for health check
+      - STOCKSCRAPER_QUESTDB_PORT=9000 #rest port
       - STOCKSCRAPER_MODE=Single #Single or Scheduled
       - STOCKSCRAPER_TICKERS_DIR=/var/lib/stock-scraper
-
+      - STOCKSCRAPER_SLEEPTIME=3600 #1hour in seconds
+      - STOCKSCRAPER_DEBUG=True #activate debug mode
     volumes:
       - ./tickers:/var/lib/stock-scraper
-
+    restart:
+      unless-stopped
     depends_on:
       - questDB
+
+  news-scraper:
+    container_name: NewsScraper
+    build: ./src/news/
+    profiles:
+      - all
+    tty: true
+    environment:
+      - NEWSSCRAPER_SCRAPE_NEWS=true #scrape news
+      - NEWSSCRAPER_SENTIMENT_ANALYSIS=true #perfrom sentiment analysis on news (deactivate this if you dont have a container with a gpu)
+      - NEWSSCRAPER_DOWNLOAD_RSS_FEED=false #Use the rss feeds from NEWSSCRAPER_RSS_DIR
+      - NEWSSCRAPER_DOWNLOAD_GOOGLE_NEWS=true #Use Google news for the tickers found in STOCKSCRAPER_TICKERS_DIR
+      - NEWSSCRAPER_DOWNLOAD_FINVIZ_NEWS=false #Use Finviz news for the tickers found in STOCKSCRAPER_TICKERS_DIR
+      - NEWSSCRAPER_DEBUG=true #activate debug mode
+      - NEWSSCRAPER_MODE=Scheduled #Single or Scheduled
+      - NEWSSCRAPER_SENTIMENT_MODE=New #New or All
+      - NEWSSCRAPER_SLEEPTIME=21600 #6 hours in seconds
+      - STOCKSCRAPER_TICKERS_DIR=/var/lib/news-scraper/tickers
+      - NEWSSCRAPER_RSS_DIR=/var/lib/news-scraper/rss
+      #MongoDB Settings
+      - NEWSSCRAPER_MONGODB_HOST=mongoDB
+      - NEWSSCRAPER_MONGODB_PORT=27017
+      - NEWSSCRAPER_MONGODB_USER=${MONGO_DB_USER}
+      - NEWSSCRAPER_MONGODB_PASSWORD=${MONGO_DB_PASDWORD}
+      - NEWSSCRAPER_MONGODB_DBNAME=news
+      - NEWSSCRAPER_MONGODB_ARTICLE_COLLECTIONNAME=articles
+      - NEWSSCRAPER_MONGODB_SENTIMENT_COLLECTIONNAME=sentiments
+      #Sentiment Analysis Settings
+      - NEWSSCRAPER_SENTIMENT_SEQUENZMODEL=ProsusAI/finbert #Huggingface model to use
+      - NEWSSCRAPER_SENTIMENT_TOKENIZER=ProsusAI/finbert #Huggingface tokenizer to use
+      - NEWSSCRAPER_MODEL_DIR=/var/lib/news-scraper/model #Directory where the model is stored      
+    volumes:
+      - ./tickers:/var/lib/news-scraper/tickers
+      - ./news:/var/lib/news-scraper/rss
+      - ./sentiment_model:/var/lib/news-scraper/model
+    depends_on:
+     - mongoDB
+    restart:
+      unless-stopped
+    networks:
+      - mongo-network
+    
+networks:
+  mongo-network:
+    driver: bridge

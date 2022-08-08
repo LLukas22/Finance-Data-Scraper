@@ -1,22 +1,31 @@
 from datetime import datetime,date
-from model.Ticker import Ticker
-from model.Intervals import INTERVALS, IntervalTypes
 import os
 from questdb.ingress import Sender, TimestampNanos, Buffer
 import requests 
 from requests import Response
 import pytz
+from finance_stock_scraper.model.Ticker import Ticker
+from finance_stock_scraper.model.Intervals import INTERVALS, IntervalTypes
 
 HOST = os.getenv('STOCKSCRAPER_QUESTDB_HOST','localhost')
-
 INFLUX_LINE_PROTOCOL_PORT = os.getenv('STOCKSCRAPER_QUESTDB_ILP_PORT',9009) 
 REST_PORT = os.getenv('STOCKSCRAPER_QUESTDB_PORT',9000) 
+MONITORING_PORT = os.getenv('STOCKSCRAPER_QUESTDB_MONITORING_PORT',9003)
+
 class QuestClient(object):
-    def __init__(self,host:str=HOST,port:int=REST_PORT,ilp_port:int=INFLUX_LINE_PROTOCOL_PORT)-> None:
+    def __init__(self,host:str=HOST,port:int=REST_PORT,ilp_port:int=INFLUX_LINE_PROTOCOL_PORT,monitoring_port:int=MONITORING_PORT)-> None:
         self.host = host
         self.ilp_port = ilp_port
         self.port = port
-        
+        self.monitoring_port = monitoring_port
+    
+    def health_check(self)-> bool:
+        try:
+            return requests.get(f"http://{self.host}:{self.monitoring_port}/status").status_code == 200
+        except:
+            return False
+            
+    
         
     def _format_time(self,time:datetime)-> str:
         return time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
@@ -46,8 +55,8 @@ class QuestClient(object):
 
 
           
-    def get_existing_tickers_for_interval(self,interval:str)->list[str]:
-        query = f"SELECT DISTINCT ticker FROM 'interval_{interval}'"
+    def get_existing_tickers_for_interval(self,interval:str,exchange:str)->list[str]:
+        query = f"SELECT DISTINCT ticker FROM 'interval_{interval}' WHERE exchange = '{exchange}'"
         response = self.raw_query(query)
         if response.status_code == 200:
             return [ticker[0] for ticker in response.json()['dataset']]

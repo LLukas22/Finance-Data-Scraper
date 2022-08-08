@@ -1,0 +1,12 @@
+pytz
+pandas
+numpy
+requests
+tqdm
+pymongo
+transformers[torch]
+beautifulsoup4
+newspaper3k
+dateparser
+cchardet
+google-news-feed

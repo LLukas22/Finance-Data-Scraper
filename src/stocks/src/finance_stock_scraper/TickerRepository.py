@@ -1,5 +1,5 @@
-from QuestClient import QuestClient
-from model.Ticker import Ticker
+from finance_stock_scraper.QuestClient import QuestClient
+from finance_stock_scraper.model.Ticker import Ticker
 import os
 import pandas as pd
 from datetime import datetime
@@ -22,7 +22,7 @@ class TickerRepository(object):
         for file in files:
             file = os.path.join(directory,file)
             exchange = os.path.basename(file).split('.')[0].upper()
-            tickers = pd.read_csv(file, header=None)
+            tickers = pd.read_csv(file)
             for ticker in tickers.values:
                 if ticker[0] is not None and isinstance(ticker[0],str):
                     self.add_ticker(Ticker(ticker[0],exchange))

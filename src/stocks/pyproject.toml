@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stock_news_scraper"
+version = "0.0.1"
+authors = [
+  { name="Lukas Kreussel"},
+]
+description = "Collect and store finanz news and stock exchange data locally"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies=[
+    "pytz",
+    "pandas",
+    "numpy",
+    "yfinance",
+    "pymongo",
+    "transformers[torch]",
+    "beautifulsoup4",
+    "newspaper3k",
+    "dateparser",
+    "cchardet",
+    "questdb>=1.0.0",
+    "requests",
+    "pandas-market-calendars",
+    "tqdm",
+    "google-news-feed>=1.0.0"
+    ]
+    
+[project.urls]
+"Homepage" = "https://github.com/LLukas22/Finance-Data-Scraper"
+"Bug Tracker" = "https://github.com/LLukas22/Finance-Data-Scraper/issues"

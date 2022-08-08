@@ -1,7 +1,7 @@
-/mongodb
-/questdb
+/storage
 /.vscode
 /worker
+/sentiment_model
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
