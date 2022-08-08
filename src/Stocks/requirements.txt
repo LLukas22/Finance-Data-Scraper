@@ -1,7 +1,0 @@
-pytz
-pandas
-yfinance
-questdb
-requests
-pandas-market-calendars
-tqdm
