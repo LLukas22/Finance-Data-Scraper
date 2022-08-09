@@ -24,19 +24,17 @@ jobs:
     - name: checkout
       uses: actions/checkout@v3
       
-
-      
-    - name: get_version
+    - id: get_version
       uses: battila7/get-version-action@v2
         
     - name: print version
-      run: echo "${{ steps.get_version.outputs.version-without-v }}"
+      run: echo ${{ steps.get_version.outputs.version-without-v }}
       
     - name: update env
       run: echo "PACKAGE_VERSION=${{ steps.get_version.outputs.version-without-v }}" >> $GITHUB_ENV
         
     - name: print package version
-      run: echo "$PACKAGE_VERSION"
+      run: echo $PACKAGE_VERSION
       
     - name: Set up Python
       uses: actions/setup-python@v3
