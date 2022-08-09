@@ -10,6 +10,9 @@ name: Upload Python Package to Test PyPi
 
 on: workflow_dispatch
 
+env:
+  GLOBAL_PACKAGE_VERSION: 0.0.2
+  
 permissions:
   contents: read
 
@@ -39,6 +42,8 @@ jobs:
         password: ${{ secrets.PYPI_TEST_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
         packages_dir: ./src/news/dist/
+      env:
+        PACKAGE_VERSION : ${{GLOBAL_PACKAGE_VERSION}}
         
     - name: Build stock_scraper
       working-directory: ./src/stocks
@@ -50,3 +55,5 @@ jobs:
         password: ${{ secrets.PYPI_TEST_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
         packages_dir: ./src/stocks/dist/
+      env:
+        PACKAGE_VERSION : ${{GLOBAL_PACKAGE_VERSION}}
