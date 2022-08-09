@@ -20,8 +20,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push
+        name: Build and push news scraper
         uses: docker/build-push-action@v3
         with:
+          context: ./src/news
+          file: ./src/news/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: user/app:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/finance-data-scraper:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/finance-data-scraper:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/finance-data-scraper:buildcache,mode=max
