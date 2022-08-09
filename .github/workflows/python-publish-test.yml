@@ -43,7 +43,7 @@ jobs:
         repository_url: https://test.pypi.org/legacy/
         packages_dir: ./src/news/dist/
       env:
-        PACKAGE_VERSION : ${{GLOBAL_PACKAGE_VERSION}}
+        PACKAGE_VERSION : $GLOBAL_PACKAGE_VERSION
         
     - name: Build stock_scraper
       working-directory: ./src/stocks
@@ -56,4 +56,4 @@ jobs:
         repository_url: https://test.pypi.org/legacy/
         packages_dir: ./src/stocks/dist/
       env:
-        PACKAGE_VERSION : ${{GLOBAL_PACKAGE_VERSION}}
+        PACKAGE_VERSION : $GLOBAL_PACKAGE_VERSION
