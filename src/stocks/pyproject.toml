@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "finance_stock_scraper"
-version = "0.0.1"
+dynamic = ["version"]
 authors = [
   { name="Lukas Kreussel"},
 ]
@@ -19,13 +19,13 @@ classifiers = [
 ]
 
 dependencies=[
-    "pytz",
-    "pandas",
-    "yfinance",
-    "questdb",
-    "requests",
-    "pandas-market-calendars",
-    "tqdm"
+    "pytz>=2022.1",
+    "pandas>=1.4.2",
+    "yfinance>=0.1.70",
+    "questdb>=1.0.0",
+    "requests>=2.28.1",
+    "pandas-market-calendars>=3.4",
+    "tqdm>=4.64.0"
 ]
     
 [project.urls]

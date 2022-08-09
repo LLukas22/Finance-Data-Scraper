@@ -38,6 +38,7 @@ if __name__ == "__main__":
     logging.getLogger("huggingface").setLevel(logging.WARNING)
     logging.getLogger("newspaper").setLevel(logging.WARNING)
     logging.getLogger("transformers").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     
     if DEBUG:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',level=logging.DEBUG)
