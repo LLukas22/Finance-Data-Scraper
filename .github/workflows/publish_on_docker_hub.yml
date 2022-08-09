@@ -10,8 +10,12 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: get version
+        
+      - name: get_version
         uses: battila7/get-version-action@v2
+        
+      - name: print version
+        run: echo "${{ steps.get_version.outputs.version-without-v }}"
         
       - name: Login to DockerHub
         uses: docker/login-action@v2
