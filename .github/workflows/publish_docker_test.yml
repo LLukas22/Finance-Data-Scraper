@@ -1,7 +1,6 @@
-name: Publish to Docker-Hub
+name: Test Publish to Docker-Hub
 
 on: workflow_dispatch
-
 
 jobs:
   docker:
@@ -20,5 +19,3 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/finance-data-scraper:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/finance-data-scraper:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/finance-data-scraper:buildcache,mode=max
