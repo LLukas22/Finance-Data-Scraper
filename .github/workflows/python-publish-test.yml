@@ -22,7 +22,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: update env
+      run: echo "PACKAGE_VERSION=$GLOBAL_PACKAGE_VERSION" >> $GITHUB_ENV
+      
+    - name: checkout
+      uses: actions/checkout@v3
+      
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
@@ -42,9 +47,7 @@ jobs:
         password: ${{ secrets.PYPI_TEST_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
         packages_dir: ./src/news/dist/
-      env:
-        PACKAGE_VERSION : $GLOBAL_PACKAGE_VERSION
-        
+ 
     - name: Build stock_scraper
       working-directory: ./src/stocks
       run: python -m build
@@ -55,5 +58,3 @@ jobs:
         password: ${{ secrets.PYPI_TEST_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
         packages_dir: ./src/stocks/dist/
-      env:
-        PACKAGE_VERSION : $GLOBAL_PACKAGE_VERSION
