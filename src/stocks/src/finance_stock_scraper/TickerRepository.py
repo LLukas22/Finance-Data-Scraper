@@ -17,6 +17,9 @@ class TickerRepository(object):
         Load tickers from *.csv files in a directory where the filename is the exchange and the tickers are the rows in the file.
         """
         files = [file for file in os.listdir(directory) if file.endswith(".csv")]
+        if len(files) == 0:
+            logging.error("Found no *.csv files in the Tickers Directory!")
+             
         logging.debug(f"Found files: {','.join(files)}")
                           
         for file in files:

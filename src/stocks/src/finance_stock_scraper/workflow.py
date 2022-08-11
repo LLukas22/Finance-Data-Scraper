@@ -13,6 +13,7 @@ from questdb.ingress import TimestampNanos, Buffer
 from datetime import datetime,date,timedelta
 
 CONFIGURED_INTERVALS = os.getenv("STOCKSCRAPER_INTERVALS","5m,1d").split(",")
+FLUX_PROTOCOL_MAX_INT = 2_147_483_647 #In theory this should be the int64 max but flux-line-protocol in quest db only supports up to int32
 
 def get_interval(interval:str)->IntervalTypes:
     if interval not in INTERVALS:
@@ -88,7 +89,7 @@ def create_point(timestamp:pd.Timestamp,row:pd.Series,ticker:Ticker,interval:str
             "low":float(row["Low"]),
             "close":float(row["Close"]),
             "adj_close":float(row["Adj Close"]),
-            "volume": ctypes.c_longlong(row["Volume"].astype(np.int64)).value
+            "volume": min(int(row["Volume"]),FLUX_PROTOCOL_MAX_INT)
         },
         at=TimestampNanos(timestamp.value)
     )
@@ -169,6 +170,7 @@ def handle_errors(errors:dict,executionContext:ExecutionContext):
     """
     if len(errors)>0:
         logging.warning(f"{len(errors)} errors occured")
+        #TODO
         # removed = []
         # for ticker,error in errors.items():
         #     if error == "No data found for this date range, symbol may be delisted":

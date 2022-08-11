@@ -13,9 +13,9 @@ from finance_news_scraper.news_sources import News_Item
 from tqdm.contrib.concurrent import thread_map
 import time
 
-RSS_DIR = os.path.abspath(os.getenv('NEWSSCRAPER_RSS_DIR',"./news"))
-TICKERS_DIR = os.path.abspath(os.getenv('STOCKSCRAPER_TICKERS_DIR',"./Tickers"))
-DEBUG = os.getenv('NEWSSCRAPER_DEBUG',"False").upper() == "TRUE"
+RSS_DIR = os.path.abspath(os.getenv('NEWSSCRAPER_RSS_DIR',"../../../news"))
+TICKERS_DIR = os.path.abspath(os.getenv('STOCKSCRAPER_TICKERS_DIR',"../../../Tickers"))
+DEBUG = os.getenv('NEWSSCRAPER_DEBUG',"True").upper() == "TRUE"
 MODE = os.getenv('NEWSSCRAPER_MODE',"Single").upper() # Single or Scheduled
 SLEEP_TIME = int(os.getenv('NEWSSCRAPER_SLEEPTIME',60*60*6)) # 6 hours
 SENTIMENT_MODE = os.getenv('NEWSSCRAPER_SENTIMENT_MODE',"ALL").upper() # ALL or NEW
@@ -39,14 +39,15 @@ if __name__ == "__main__":
     logging.getLogger("newspaper").setLevel(logging.WARNING)
     logging.getLogger("transformers").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("asyncio").setLevel(logging.WARNING)
     
     if DEBUG:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',level=logging.DEBUG)
     else:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',level=logging.INFO)
         
-    logging.debug(f"RSS_DIR:{RSS_DIR}")
-    logging.debug(f"RSS_DIR:{TICKERS_DIR}")
+    logging.info(f"RSS_DIR:{RSS_DIR}")
+    logging.info(f"TICKERS_DIR:{TICKERS_DIR}")
     
     os.makedirs(RSS_DIR,exist_ok=True)
     os.makedirs(TICKERS_DIR,exist_ok=True)
@@ -58,7 +59,7 @@ if __name__ == "__main__":
             rss_feeds = json.load(f)
 
     files = [file for file in os.listdir(TICKERS_DIR) if file.endswith(".csv")]
-    logging.debug(f"Found files: {','.join(files)}")
+    logging.info(f"Found Ticker files: {','.join(files)}")
        
       
     tickers=[]               
@@ -78,14 +79,13 @@ if __name__ == "__main__":
     mongoClient = MongoDBClient()
     sentimentProvider = SentimentProvider()
     
-    
     while True:
         news_items:list[News_Item] = []
         
         if PERFORM_NEWS_SCRAPING:
             
             if DOWNLOAD_GOOGLE_NEWS and len(tickers) > 0:
-                news_items += get_google_news_items(tickers)
+                news_items += get_google_news_items(tickers[:10])
                 
             if DOWNLOAD_FINVIZ_NEWS and len(tickers) >  0:
                 news_items += get_finviz_news_items(tickers)

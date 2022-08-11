@@ -13,8 +13,8 @@ from finance_stock_scraper.workflow import gather_data
 
 
 
-TICKERS_DIR = os.path.abspath(os.getenv('STOCKSCRAPER_TICKERS_DIR',"./Tickers"))
-DEBUG = os.getenv('STOCKSCRAPER_DEBUG',"True").upper() == "TRUE"
+TICKERS_DIR = os.path.abspath(os.getenv('STOCKSCRAPER_TICKERS_DIR',"../../../Tickers"))
+DEBUG = os.getenv('STOCKSCRAPER_DEBUG',"False").upper() == "TRUE"
 MODE = os.getenv('STOCKSCRAPER_MODE',"Single").upper() # Single or Scheduled
 SLEEP_TIME = int(os.getenv('STOCKSCRAPER_SLEEPTIME',60*60*3)) # 3 hours
 
@@ -27,9 +27,11 @@ if __name__ == "__main__":
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',level=logging.DEBUG)
     else:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',level=logging.INFO)
-    logging.debug(f"TICKERS_DIR:{TICKERS_DIR}")
-    logging.debug(f"MODE:{MODE}")
-    logging.debug(f"SLEEP_TIME:{SLEEP_TIME}")
+        
+    logging.info(f"---Starting Scraper---")
+    logging.info(f"TICKERS_DIR:{TICKERS_DIR}")
+    logging.info(f"MODE:{MODE}")
+    logging.info(f"SLEEP_TIME:{SLEEP_TIME}")
         
     # Create QuestClient
     questClient = QuestClient()
@@ -38,19 +40,24 @@ if __name__ == "__main__":
         if questClient.health_check():
             break
         else:
+            logging.warning(f"Could not establish connection to QuestDB! Retrying ...")
             retries += 1
+            time.sleep(2)
             
         if retries > 10:
             raise Exception("Could not connect to QuestDB!")
         
+    if not os.path.isdir(TICKERS_DIR):
+        raise Exception(f"Tickers Directory '{TICKERS_DIR}' does not exist!")
+    
+    
     ticker_repo = TickerRepository(questClient)
     ticker_repo.load_tickers(TICKERS_DIR)
     
-    if DEBUG:
-        logging.info("Loaded Tickers:")
-        for exchange in ticker_repo.exchanges:
-            logging.info(f"{exchange}:")
-            logging.info(",".join([ticker for ticker in ticker_repo.exchanges[exchange]]))
+    logging.info("Loaded Tickers:")
+    for exchange in ticker_repo.exchanges:
+        logging.info(f"{exchange}:")
+        logging.info(",".join([ticker for ticker in ticker_repo.exchanges[exchange]]))
     
     yfDataProvider = YFDataProvider()
     

@@ -58,7 +58,8 @@ services:
 
   stock-scraper:
     container_name: StockScraper
-    build: ./src/stocks/
+    #build: ./src/stocks/
+    image: llukas22/finance-stock-scraper:0.0.1
     profiles:
       - all
       - stock-scraper
@@ -68,7 +69,7 @@ services:
       - STOCKSCRAPER_QUESTDB_ILP_PORT=9009 #line protocol port
       - STOCKSCRAPER_QUESTDB_MONITORING_PORT=9003 #Port for health check
       - STOCKSCRAPER_QUESTDB_PORT=9000 #rest port
-      - STOCKSCRAPER_MODE=Single #Single or Scheduled
+      - STOCKSCRAPER_MODE=Scheduled #Single or Scheduled
       - STOCKSCRAPER_TICKERS_DIR=/var/lib/stock-scraper
       - STOCKSCRAPER_SLEEPTIME=3600 #1hour in seconds
       - STOCKSCRAPER_DEBUG=True #activate debug mode
@@ -81,7 +82,8 @@ services:
 
   news-scraper:
     container_name: NewsScraper
-    build: ./src/news/
+    #build: ./src/news/
+    image: llukas22/finance-news-scraper:0.0.1
     profiles:
       - all
     tty: true

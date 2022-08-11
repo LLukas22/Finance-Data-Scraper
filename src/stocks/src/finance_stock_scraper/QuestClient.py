@@ -7,6 +7,7 @@ import pytz
 from finance_stock_scraper.model.Ticker import Ticker
 from finance_stock_scraper.model.Intervals import INTERVALS, IntervalTypes
 
+
 HOST = os.getenv('STOCKSCRAPER_QUESTDB_HOST','localhost')
 INFLUX_LINE_PROTOCOL_PORT = os.getenv('STOCKSCRAPER_QUESTDB_ILP_PORT',9009) 
 REST_PORT = os.getenv('STOCKSCRAPER_QUESTDB_PORT',9000) 

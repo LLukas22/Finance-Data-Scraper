@@ -5,7 +5,6 @@ from transformers import BertForSequenceClassification, BertTokenizer
 import numpy as np
 import os 
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MAX_LENGTH = 512
 START_TOKEN = 101
 STOP_TOKEN = 102
@@ -15,7 +14,7 @@ IGNORE_MASK = 0
 CLASSES = [-1,0,1]
 TOKENIZER_MODEL = os.getenv('NEWSSCRAPER_SENTIMENT_TOKENIZER',"ProsusAI/finbert") 
 SEQUENZECLASSIFICATION_MODEL = os.getenv('NEWSSCRAPER_SENTIMENT_SEQUENZMODEL',"ProsusAI/finbert") 
-MODEL_DIR = os.path.abspath(os.getenv('NEWSSCRAPER_MODEL_DIR',"./sentiment_model"))
+MODEL_DIR = os.path.abspath(os.getenv('NEWSSCRAPER_MODEL_DIR',"../../../sentiment_model"))
 
 
 class  SentimentProvider(object):
@@ -31,6 +30,7 @@ class  SentimentProvider(object):
         return self.model is not None and self.tokenizer is not None
     
     def load_model(self)->None:
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = BertTokenizer.from_pretrained(TOKENIZER_MODEL)
         os.makedirs(MODEL_DIR,exist_ok=True)
         if not os.path.isfile(os.path.join(MODEL_DIR,"model.pt")):
@@ -47,7 +47,7 @@ class  SentimentProvider(object):
             self.model = torch.jit.load(os.path.join(MODEL_DIR,"model.pt"))
             
         self.model.eval()
-        self.model = self.model.to(DEVICE)
+        self.model = self.model.to(self.device)
         
     def dispose_model(self)->None:
         del self.model
@@ -92,8 +92,8 @@ class  SentimentProvider(object):
                     padded_ids[i] = torch.cat([padded_ids[i],torch.Tensor([PADDING_TOKEN]*padding_length)])
                     padded_masks[i] = torch.cat([padded_masks[i],torch.Tensor([IGNORE_MASK]*padding_length)])
 
-            input_ids = torch.stack(padded_ids).long().to(DEVICE)
-            attention_mask = torch.stack(padded_masks).int().to(DEVICE)
+            input_ids = torch.stack(padded_ids).long().to(self.device)
+            attention_mask = torch.stack(padded_masks).int().to(self.device)
             return{
                 'input_ids': input_ids,
                 'attention_mask': attention_mask
