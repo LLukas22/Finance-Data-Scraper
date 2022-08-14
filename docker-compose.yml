@@ -59,7 +59,7 @@ services:
   stock-scraper:
     container_name: StockScraper
     #build: ./src/stocks/
-    image: llukas22/finance-stock-scraper:0.0.1
+    image: llukas22/finance-stock-scraper:0.0.4
     profiles:
       - all
       - stock-scraper
@@ -83,7 +83,7 @@ services:
   news-scraper:
     container_name: NewsScraper
     #build: ./src/news/
-    image: llukas22/finance-news-scraper:0.0.1
+    image: llukas22/finance-news-scraper:0.0.4
     profiles:
       - all
     tty: true
